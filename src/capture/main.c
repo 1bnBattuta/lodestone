@@ -10,9 +10,12 @@
  */
 
 #include <errno.h>
+#include <linux/if_ether.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/poll.h>
 
 #include "packet_mmap.h"

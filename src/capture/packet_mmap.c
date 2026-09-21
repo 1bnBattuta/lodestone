@@ -10,6 +10,14 @@
  */
 
 #include "packet_mmap.h"
+#include <linux/if_ether.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 int tpacket_setup(struct tpacket_ring *ring, char *ifname) {
     int fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));

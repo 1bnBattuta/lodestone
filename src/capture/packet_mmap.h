@@ -12,17 +12,8 @@
 #ifndef LS_PACKET_MMAP_H
 #define LS_PACKET_MMAP_H
 
-#include <linux/if_ether.h>
 #include <linux/if_packet.h>
-#include <net/if.h>
-#include <netinet/in.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 // Macros will be used when adding a dynamic way to set 
 // ring buffer dimensions.
