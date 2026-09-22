@@ -150,3 +150,70 @@ int args_parse(int argc, char **argv, const arg_opt_t *opts) {
 
     return 0;
 }
+
+/* Name shown after options that take a value, or NULL for flags. */
+static const char *value_name(const arg_opt_t *opt) {
+    if (opt->type == ARG_FLAG) {return NULL;}
+    if (opt->value_name) {return opt->value_name;}
+    return opt->type == ARG_INT ? "int" : opt->type == ARG_STRING ? "str" : "value";
+}
+ 
+/*
+ * Writes the left column of the help line ("-n, --count <int>") into buf.
+ * Returns the number of characters written.
+ */
+static int format_opt(const arg_opt_t *opt, char *buf, size_t size) {
+    const char *ln = opt->long_name ? bare_long_name(opt->long_name) : NULL;
+    int n;
+ 
+    const char *vn = value_name(opt);
+    if (opt->short_name && ln)
+        n = snprintf(buf, size, "-%c, --%s%s", opt->short_name, ln,vn);
+    else if (opt->short_name)
+        n = snprintf(buf, size, "-%c%s", opt->short_name, vn);
+    else /* long name only: with indentation so "--" lines up with the other long names */
+        n = snprintf(buf, size, "    --%s%s", ln, vn);
+ 
+    if (n < 0)
+        return 0;
+    return (size_t)n < size ? n : (int)size - 1;
+}
+ 
+/*
+ * prints for example:
+ *   Usage: prog <usage_buffer>
+ *
+ *   Options:
+ *     -v, --verbose      Enable verbose output
+ *     -n, --count <int>  Number of iterations
+ *         --out <str>    Output file
+ */
+void args_print_help(const char *prog,
+                     const char *usage_buffer,
+                     const arg_opt_t *opts)
+{
+    printf("Usage: %s %s\n", prog, usage_buffer ? usage_buffer : "[options]");
+ 
+    if (opts == NULL || opt_is_sentinel(opts))
+        return;
+ 
+    char col[128];
+    int width = 0;
+ 
+    /* find the widest left column so descriptions line up*/
+    for (const arg_opt_t *opt = opts; !opt_is_sentinel(opt); opt++) {
+        int n = format_opt(opt, col, sizeof col);
+        if (n > width)
+            width = n;
+    }
+ 
+    /* print each option, padded to that width*/
+    printf("\nOptions:\n");
+    for (const arg_opt_t *opt = opts; !opt_is_sentinel(opt); opt++) {
+        format_opt(opt, col, sizeof col);
+        if (opt->description && opt->description[0] != '\0')
+            printf("  %-*s  %s\n", width, col, opt->description);
+        else
+            printf("  %s\n", col);
+    }
+}
