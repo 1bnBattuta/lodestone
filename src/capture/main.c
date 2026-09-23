@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sys/poll.h>
 
+#include "../common/args.h"
 #include "packet_mmap.h"
 
 #ifndef likely
@@ -26,6 +27,27 @@
 #ifndef unlikely
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
+
+// Global config
+typedef struct {
+    int show_help;
+    const char *interface_name;
+    int promisc;
+} config_t;
+
+static config_t cfg = {
+    .show_help = 0,
+    .interface_name = "eth0",
+    .promisc = 0
+};
+
+// Supported command line arguments
+const arg_opt_t opts[] = {
+    {'i', "interface", ARG_STRING, &cfg.interface_name, NULL, "Network interface to capture on", "name"},
+    {'h', "help", ARG_FLAG, &cfg.show_help, NULL, "Show this help menu and exit", NULL},
+    {'P', "promiscuous", ARG_FLAG, &cfg.promisc, NULL, "Enable NIC Promiscuous mode", NULL},
+    ARG_END
+};
 
 static unsigned long packets_total = 0, bytes_total = 0;
 static volatile sig_atomic_t sigint = 0;
