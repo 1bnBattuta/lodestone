@@ -82,12 +82,25 @@ static void walk_block(struct tpacket_block_desc *pbd) {
     bytes_total += bytes;
 }
 
-int main(int argc, char **argp)
+int main(int argc, char **argv)
 {
     int err;
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s INTERFACE\n", argp[0]);
+
+    err = args_parse(argc, argv, opts);
+    if (err < 0) {
+        perror("argument parser");
         return EXIT_FAILURE;
+    }
+
+    if (cfg.show_help) {
+        args_print_help(argv[0], " [OPTIONS]", opts);
+        return 0;
+    }
+
+    if (cfg.interface_name == NULL) {
+        perror("Interface name must be provided");
+        args_print_help(argv[0], " [OPTIONS]", opts);
+        return 1;
     }
 
     struct sigaction sa;
@@ -102,10 +115,18 @@ int main(int argc, char **argp)
 
     struct tpacket_ring ring;
     memset(&ring, 0, sizeof(ring));
-    int fd = tpacket_setup(&ring, argp[argc - 1]);
+    int fd = tpacket_setup(&ring, argv[argc - 1]);
     if (fd < 0) {
         perror("tpacket_setup");
         exit(EXIT_FAILURE);
+    }
+
+    if (cfg.promisc) {
+        err = tpacket_promisc(fd, cfg.interface_name);
+        if (err < 0) {
+            perror("setsockopt");
+            return -1;
+        }
     }
 
     struct pollfd pfd;
