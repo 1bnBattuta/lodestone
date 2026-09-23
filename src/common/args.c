@@ -168,11 +168,11 @@ static int format_opt(const arg_opt_t *opt, char *buf, size_t size) {
  
     const char *vn = value_name(opt);
     if (opt->short_name && ln)
-        n = snprintf(buf, size, "-%c, --%s%s", opt->short_name, ln,vn);
+        n = snprintf(buf, size, "-%c, --%s <%s>", opt->short_name, ln, vn);
     else if (opt->short_name)
-        n = snprintf(buf, size, "-%c%s", opt->short_name, vn);
+        n = snprintf(buf, size, "-%c <%s>", opt->short_name, vn);
     else /* long name only: with indentation so "--" lines up with the other long names */
-        n = snprintf(buf, size, "    --%s%s", ln, vn);
+        n = snprintf(buf, size, "    --%s <%s>", ln, vn);
  
     if (n < 0)
         return 0;
