@@ -56,4 +56,6 @@ void tpacket_teardown(struct tpacket_ring *ring, int fd);
  */
 void tpacket_flush_block(struct tpacket_block_desc *pbd);
 
+int tpacket_promisc(int fd ,const char *ifname);
+
 #endif // LS_PACKET_MMAP_H

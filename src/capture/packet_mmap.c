@@ -86,3 +86,18 @@ void tpacket_teardown(struct tpacket_ring *ring, int fd) {
 void tpacket_flush_block(struct tpacket_block_desc *pbd) {
     pbd->hdr.bh1.block_status = TP_STATUS_KERNEL;
 }
+
+int tpacket_promisc(int fd ,const char *ifname) {
+    struct packet_mreq mreq;
+    memset(&mreq, 0, sizeof(mreq));
+    
+    mreq.mr_ifindex = if_nametoindex(ifname);
+    mreq.mr_type = PACKET_MR_PROMISC;
+    
+    int err = setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
+    if (err < 0) {
+        perror("setsockopt: Promiscuous mode setup");
+        return -1;
+    }
+    return 0;
+}
