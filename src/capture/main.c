@@ -37,7 +37,7 @@ typedef struct {
 
 static config_t cfg = {
     .show_help = 0,
-    .interface_name = "eth0",
+    .interface_name = NULL,
     .promisc = 0
 };
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 
     err = args_parse(argc, argv, opts);
     if (err < 0) {
-        perror("argument parser");
+        fprintf(stderr, "argument parser\n");
         return EXIT_FAILURE;
     }
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     }
 
     if (cfg.interface_name == NULL) {
-        perror("Interface name must be provided");
+        fprintf(stderr, "Interface name must be provided\n");
         args_print_help(argv[0], " [OPTIONS]", opts);
         return 1;
     }
