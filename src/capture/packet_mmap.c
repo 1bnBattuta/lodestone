@@ -83,10 +83,6 @@ void tpacket_teardown(struct tpacket_ring *ring, int fd) {
     close(fd);
 }
 
-void tpacket_flush_block(struct tpacket_block_desc *pbd) {
-    pbd->hdr.bh1.block_status = TP_STATUS_KERNEL;
-}
-
 int tpacket_promisc(int fd ,const char *ifname) {
     struct packet_mreq mreq;
     memset(&mreq, 0, sizeof(mreq));

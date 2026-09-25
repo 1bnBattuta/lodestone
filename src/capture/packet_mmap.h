@@ -51,11 +51,30 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname);
 void tpacket_teardown(struct tpacket_ring *ring, int fd);
 
 /**
- * \brief sends a read block back to the kernel
+ * \brief Checks if a block is released by the kernel to userspace
  * 
- * @param pbd block descriptor
+ * Uses gcc/clang built-in atomic load to prevent the program from reading
+ * the unreleased block (nothing after this can move before it)
+ * \param pbd block descriptor
+ * \return int whether the block is ready or not
  */
-void tpacket_flush_block(struct tpacket_block_desc *pbd);
+static inline int tpacket_block_ready(struct tpacket_block_desc *pbd) {
+    return (__atomic_load_n(&pbd->hdr.bh1.block_status, __ATOMIC_ACQUIRE)
+            & TP_STATUS_USER) != 0;
+}
+
+/**
+ * \brief sends a processed block back to the kernel
+ *
+ * Uses gcc/clang built-in atomic store to ensure all reads of the block
+ * complete before the kernel can reuse it.
+ * (nothing before this can move after it)
+ * \param pbd block descriptor
+ */
+static inline void tpacket_block_flush(struct tpacket_block_desc *pbd) {
+    __atomic_store_n(&pbd->hdr.bh1.block_status, TP_STATUS_KERNEL,
+                        __ATOMIC_RELEASE);
+}
 
 int tpacket_promisc(int fd ,const char *ifname);
 

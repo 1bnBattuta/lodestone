@@ -140,7 +140,7 @@ int main(int argc, char **argv)
     while (likely(!sigint)) {
         pbd = (struct tpacket_block_desc *) ring.rd[block_num].iov_base;
 
-        if ((pbd->hdr.bh1.block_status & TP_STATUS_USER) == 0 ) {
+        if (!tpacket_block_ready(pbd)) {
             err = poll(&pfd, 1, -1);
             if (err < 0 && errno != EINTR) {
                 perror("poll");
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
         }
 
         walk_block(pbd);
-        tpacket_flush_block(pbd);
+        tpacket_block_flush(pbd);
         block_num = (block_num + 1) % blocks;
     }
 
