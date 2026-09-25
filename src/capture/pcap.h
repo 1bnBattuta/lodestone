@@ -1,7 +1,7 @@
 /**
  * @file pcap.h
  * @author Omar Merroun
- * @brief pcap parser API
+ * @brief pcap writer API
  * @version 0.1
  * @date 2026-09-25
  * 
@@ -40,31 +40,31 @@ _Static_assert(sizeof(pcap_hdr_t) == 24, "pcap file header must be 24 bytes");
 _Static_assert(sizeof(pcap_rec_hdr_t) == 16, "pcap record header must be 16 bytes");
 
 /**
- * @brief Creates a pcap file, truncating it if it exists.
- * @param filename path of the file to create
- * @return file pointer, or NULL on error
+ * \brief Creates a pcap file, truncating it if it exists.
+ * \param filename path of the file to create
+ * \return file pointer, or NULL on error
  */
 FILE *pcap_file_create(const char *filename);
 
 /**
- * @brief Writes the pcap file header.
- * @param fp file pointer
- * @param snaplen max bytes captured per packet
- * @param linktype link type (such as PCAP_LINKTYPE_ETHERNET)
- * @return 0 on success, -1 else
+ * \brief Writes the pcap file header.
+ * \param fp file pointer
+ * \param snaplen max bytes captured per packet
+ * \param linktype link type (such as PCAP_LINKTYPE_ETHERNET)
+ * \return 0 on success, -1 else
  */
 int pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
 
 /**
- * @brief Writes one packet (record header + data) to a pcap file.
+ * \brief Writes one packet (record header + data) to a pcap file.
  *
- * @param fp      file pointer
- * @param data    pointer to the first byte of the packet (link-layer header)
- * @param caplen  number of bytes available in data (saved to the file)
- * @param origlen original length of the packet on the wire
- * @param ts_sec  timestamp, seconds
- * @param ts_nsec timestamp, nanoseconds
- * @return 0 on success, -1 otherwise
+ * \param fp      file pointer
+ * \param data    pointer to the first byte of the packet (link-layer header)
+ * \param caplen  number of bytes available in data (saved to the file)
+ * \param origlen original length of the packet on the wire
+ * \param ts_sec  timestamp, seconds
+ * \param ts_nsec timestamp, nanoseconds
+ * \return 0 on success, -1 otherwise
  */
 int pcap_file_write_packet(FILE *fp, const uint8_t *data,
                            uint32_t caplen, uint32_t origlen,
