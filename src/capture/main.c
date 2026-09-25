@@ -30,12 +30,14 @@
 
 // Global config
 typedef struct {
+    int af_xdp;         // Address family: 0 AF_PACKET, 1 AF_XDP
     int show_help;
     const char *interface_name;
     int promisc;
 } config_t;
 
 static config_t cfg = {
+    .af_xdp = 0,
     .show_help = 0,
     .interface_name = NULL,
     .promisc = 0
@@ -46,6 +48,7 @@ const arg_opt_t opts[] = {
     {'i', "interface", ARG_STRING, &cfg.interface_name, NULL, "Network interface to capture on", "name"},
     {'h', "help", ARG_FLAG, &cfg.show_help, NULL, "Show this help menu and exit", NULL},
     {'P', "promiscuous", ARG_FLAG, &cfg.promisc, NULL, "Enable NIC Promiscuous mode", NULL},
+    {0, "af_xdp", ARG_FLAG, &cfg.af_xdp, NULL, "Run in AF_XDP mode", NULL},
     ARG_END
 };
 
@@ -95,6 +98,11 @@ int main(int argc, char **argv)
     if (cfg.show_help) {
         args_print_help(argv[0], " [OPTIONS]", opts);
         return 0;
+    }
+
+    if (cfg.af_xdp) {
+        fprintf(stdout, "AF_XDP is not yet supported\n");
+        return EXIT_FAILURE;
     }
 
     if (cfg.interface_name == NULL) {
