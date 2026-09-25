@@ -19,7 +19,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-int tpacket_setup(struct tpacket_ring *ring, char *ifname) {
+int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     int fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (fd < 0) {
         perror("socket");

@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 
     struct tpacket_ring ring;
     memset(&ring, 0, sizeof(ring));
-    int fd = tpacket_setup(&ring, argv[argc - 1]);
+    int fd = tpacket_setup(&ring, cfg.interface_name);
     if (fd < 0) {
         perror("tpacket_setup");
         exit(EXIT_FAILURE);

@@ -39,7 +39,7 @@ struct tpacket_ring {
  * \param ifname interface name
  * \return file descriptor of the created socket
  */
-int tpacket_setup(struct tpacket_ring *ring, char *ifname);
+int tpacket_setup(struct tpacket_ring *ring, const char *ifname);
 
 /**
  * \brief frees allocated memory, unmap shared memory and closes the socket
