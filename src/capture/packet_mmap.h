@@ -14,8 +14,9 @@
 
 #include <linux/if_packet.h>
 #include <stdint.h>
+#include <sys/uio.h>
 
-// Macros will be used when adding a dynamic way to set 
+// Maybe changed to macros when adding a dynamic way to set 
 // ring buffer dimensions.
 static const int TPACKET_VERSION = TPACKET_V3;
 static const unsigned int BLOCK_SIZE = 1 << 22; // 4MiB
@@ -26,10 +27,10 @@ static const unsigned int RETIRE_BLK_TOV = 60; //msec
 
 /** TPACKET_V3 ring buffer context */
 struct tpacket_ring {
-    struct iovec *rd;       /*< A pointer to an iovec array mapping the
+    struct iovec *rd;       /**< A pointer to an iovec array mapping the
                                 user memory to the kernel ring blocks*/
-    uint8_t *map;           /*< A pointer to the mmap region*/
-    struct tpacket_req3 req;/*< Configuration struct*/
+    uint8_t *map;           /**< A pointer to the mmap region*/
+    struct tpacket_req3 req;/**< Configuration struct*/
 };
 
 /**
