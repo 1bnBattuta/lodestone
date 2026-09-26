@@ -17,6 +17,7 @@
 
 #define PCAP_MAGIC_NSEC 0xA1B23C4Du   /* nanosecond resolution timestamps */
 #define PCAP_LINKTYPE_ETHERNET 1u
+#define PCAP_DEFAULT_SNAPLEN 262144u
 
 /** pcap file header (24 bytes, host byte order) */
 typedef struct {
