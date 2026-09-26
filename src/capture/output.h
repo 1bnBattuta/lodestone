@@ -31,9 +31,9 @@ typedef struct {
 
 /**
  * \brief creates output file
- * \return FILE pointer
+ * \return 0 on success, -1 otherwise
  */
-FILE *output_open(output_cfg_t *cfg);
+int output_open(output_cfg_t *cfg);
 
 /**
  * \brief Write a record to the output file or stdout
@@ -44,7 +44,7 @@ int output_write(const output_cfg_t *cfg, const pcap_rec_hdr_t *hdr, const uint8
 /**
  * \brief flushes and closes the output file
  */
-void output_close(const output_cfg_t *cfg);
+void output_close(output_cfg_t *cfg);
 
 
 #endif // LS_OUTPUT_H
