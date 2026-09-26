@@ -10,6 +10,7 @@
  */
 
 #include "packet_mmap.h"
+#include <net/if_arp.h>
 #include <linux/if_ether.h>
 #include <net/if.h>
 #include <netinet/in.h>
@@ -96,4 +97,23 @@ int tpacket_promisc(int fd ,const char *ifname) {
         return -1;
     }
     return 0;
+}
+
+int tpacket_linktype(int fd) {
+    struct sockaddr_ll sll;
+    socklen_t len = sizeof(sll);
+
+    if (getsockname(fd, (struct sockaddr *)&sll, &len) < 0) {
+        return -1;
+    }
+
+    switch (sll.sll_hatype) {
+        case ARPHRD_ETHER:
+        case ARPHRD_LOOPBACK:   /* Linux loopback uses a zero Ethernet header */
+            return 1;           /* LINKTYPE_ETHERNET */
+        case ARPHRD_NONE:       /* like: tun and WireGuard. no link header */
+            return 101;         /* LINKTYPE_RAW */
+        default:
+            return -1;
+    }
 }

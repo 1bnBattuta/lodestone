@@ -76,6 +76,16 @@ static inline void tpacket_block_flush(struct tpacket_block_desc *pbd) {
                         __ATOMIC_RELEASE);
 }
 
+/**
+ * \brief enables promiscuous mode on capture interface
+ * 
+ * \return int 0 on success, -1 otherwise
+ */
 int tpacket_promisc(int fd ,const char *ifname);
+
+/**
+ * \brief returns a pcap link type, or -1 if unsupported 
+ */
+int tpacket_linktype(int fd);
 
 #endif // LS_PACKET_MMAP_H
