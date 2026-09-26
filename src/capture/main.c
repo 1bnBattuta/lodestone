@@ -32,14 +32,16 @@
 typedef struct {
     int af_xdp;         // Address family: 0 AF_PACKET, 1 AF_XDP
     int show_help;
-    const char *interface_name;
     int promisc;
+    const char *interface_name;
+    const char *output_file;
 } config_t;
 
 static config_t cfg = {
     .af_xdp = 0,
     .show_help = 0,
     .interface_name = NULL,
+    .output_file = NULL,
     .promisc = 0
 };
 
@@ -49,6 +51,7 @@ const arg_opt_t opts[] = {
     {'h', "help", ARG_FLAG, &cfg.show_help, NULL, "Show this help menu and exit", NULL},
     {'P', "promiscuous", ARG_FLAG, &cfg.promisc, NULL, "Enable NIC Promiscuous mode", NULL},
     {0, "af_xdp", ARG_FLAG, &cfg.af_xdp, NULL, "Run in AF_XDP mode", NULL},
+    {'o', "output", ARG_STRING, &cfg.output_file, NULL, "Output file", "name"},
     ARG_END
 };
 
@@ -101,14 +104,14 @@ int main(int argc, char **argv)
     }
 
     if (cfg.af_xdp) {
-        fprintf(stdout, "AF_XDP is not yet supported\n");
+        fprintf(stderr, "AF_XDP is not yet supported\n");
         return EXIT_FAILURE;
     }
 
     if (cfg.interface_name == NULL) {
         fprintf(stderr, "Interface name must be provided\n");
         args_print_help(argv[0], " [OPTIONS]", opts);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     struct sigaction sa;
