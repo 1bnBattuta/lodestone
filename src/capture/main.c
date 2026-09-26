@@ -10,16 +10,19 @@
  */
 
 #include <errno.h>
-#include <linux/if_ether.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/poll.h>
+#include <poll.h>
+#include <sys/types.h>
 
 #include "../common/args.h"
+#include "output.h"
 #include "packet_mmap.h"
+#include "pcap.h"
 
 #ifndef likely
 #define likely(x)   __builtin_expect(!!(x), 1)
@@ -62,16 +65,7 @@ static void sighandler(int num) {
     sigint = 1;
 }
 
-// Small parser for Ethernet
-static void display(struct tpacket3_hdr *ppd) {
-    struct ethhdr *eth = (struct ethhdr *) ( (uint8_t *) ppd + ppd->tp_mac);
-    
-    printf("Source address: %02x:%02x:%02x:%02x:%02x:%02x\n", eth->h_source[0], eth->h_source[1], eth->h_source[2], eth->h_source[3], eth->h_source[4], eth->h_source[5]);
-    printf("Destination address: %02x:%02x:%02x:%02x:%02x:%02x\n", eth->h_dest[0], eth->h_dest[1], eth->h_dest[2], eth->h_dest[3], eth->h_dest[4], eth->h_dest[5]);
-    printf("Packet Type: %x\n\n", ntohs(eth->h_proto));
-}
-
-static void walk_block(struct tpacket_block_desc *pbd) {
+static int walk_block(struct tpacket_block_desc *pbd, output_cfg_t *out_cfg) {
     unsigned long bytes = 0;
     int num_pkts = pbd->hdr.bh1.num_pkts;
     struct tpacket3_hdr *ppd;
@@ -80,12 +74,28 @@ static void walk_block(struct tpacket_block_desc *pbd) {
     for (int i = 0; i < num_pkts; ++i) {
         bytes += ppd->tp_snaplen;
 
-        display(ppd);
+        uint32_t caplen = ppd->tp_snaplen;
+        if (caplen > out_cfg->snaplen)
+            caplen = out_cfg->snaplen;
+
+        pcap_rec_hdr_t hdr = {
+            .ts_sec = ppd->tp_sec,
+            .ts_nsec = ppd->tp_nsec,
+            .captured_len = caplen,
+            .original_len = ppd->tp_len,
+        };
+
+        uint8_t *data = (uint8_t *) ppd + ppd->tp_mac; 
+        if (output_write(out_cfg, &hdr, data) < 0) {
+            return -1;
+        }
         ppd = (struct tpacket3_hdr *) ( (uint8_t *) ppd + ppd->tp_next_offset);
     }
 
     packets_total += num_pkts;
     bytes_total += bytes;
+
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -136,8 +146,28 @@ int main(int argc, char **argv)
         err = tpacket_promisc(fd, cfg.interface_name);
         if (err < 0) {
             perror("setsockopt");
-            return -1;
+            return EXIT_FAILURE;
         }
+    }
+
+    int linktype = tpacket_linktype(fd);
+    if (linktype < 0) {
+        fprintf(stderr, "%s: unsupported link type\n", cfg.interface_name);
+        tpacket_teardown(&ring, fd);
+        return EXIT_FAILURE;
+    }
+
+    output_cfg_t out_cfg = {
+        .pcap_path = cfg.output_file,              /* NULL if no -o */
+        .display   = (cfg.output_file == NULL),    /* like tcpdump -w: file or screen */
+        .snaplen   = PCAP_DEFAULT_SNAPLEN,
+        .linktype  = (uint32_t)linktype,
+    };
+
+    if (output_open(&out_cfg) < 0) {
+        perror(cfg.output_file);                /* fopen sets errno */
+        tpacket_teardown(&ring, fd);
+        return EXIT_FAILURE;
     }
 
     struct pollfd pfd;
@@ -160,7 +190,10 @@ int main(int argc, char **argv)
             continue;
         }
 
-        walk_block(pbd);
+        if (walk_block(pbd, &out_cfg) < 0) {
+            perror("write");
+            break;  // To release resources and prints stats
+        }
         tpacket_block_flush(pbd);
         block_num = (block_num + 1) % blocks;
     }
@@ -177,6 +210,8 @@ int main(int argc, char **argv)
     printf("\nReceived %u packets, %lu bytes, %u dropped, freeze_q_cnt: %u\n",
     stats.tp_packets, bytes_total, stats.tp_drops,
     stats.tp_freeze_q_cnt);
+
+    output_close(&out_cfg);
 
     tpacket_teardown(&ring, fd);
     return 0;
