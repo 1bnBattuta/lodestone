@@ -19,7 +19,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CC := gcc
 CPPFLAGS := $(INC_FLAGS) -MMD -MP
-CFLAGS := -Wall -Wextra -Wpedantic -g3 -fsanitize=address,undefined
+CFLAGS := -Wall -Wextra -Wpedantic -Wshadow -g3 -fsanitize=address,undefined
 LDFLAGS += -fsanitize=address,undefined
 
 # The final build step.
