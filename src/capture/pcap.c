@@ -34,22 +34,13 @@ int pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype) {
     return 0;
 }
 
-int pcap_file_write_packet(FILE *fp, const uint8_t *data,
-                           uint32_t caplen, uint32_t origlen,
-                           uint32_t ts_sec, uint32_t ts_nsec)
-{
-    pcap_rec_hdr_t rec = {
-        .ts_sec   = ts_sec,
-        .ts_nsec  = ts_nsec,
-        .captured_len = caplen,
-        .original_len = origlen,
-    };
-    
-    if (fwrite(&rec, sizeof(pcap_rec_hdr_t), 1, fp) != 1) {
+int pcap_file_write_packet(FILE *fp, const uint8_t *data, const pcap_rec_hdr_t *rec)
+{   
+    if (fwrite(rec, sizeof(pcap_rec_hdr_t), 1, fp) != 1) {
         return -1;
     }
 
-    if (fwrite(data, 1, caplen, fp) != caplen) {
+    if (fwrite(data, 1, rec->captured_len, fp) != rec->captured_len) {
         return -1;
     }
     
