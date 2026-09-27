@@ -164,18 +164,25 @@ static const char *value_name(const arg_opt_t *opt) {
  */
 static int format_opt(const arg_opt_t *opt, char *buf, size_t size) {
     const char *ln = opt->long_name ? bare_long_name(opt->long_name) : NULL;
+    const char *vn = value_name(opt);   /* NULL for flags as they take no value */
     int n;
- 
-    const char *vn = value_name(opt);
+
     if (opt->short_name && ln)
-        n = snprintf(buf, size, "-%c, --%s <%s>", opt->short_name, ln, vn);
+        n = snprintf(buf, size, "-%c, --%s", opt->short_name, ln);
     else if (opt->short_name)
-        n = snprintf(buf, size, "-%c <%s>", opt->short_name, vn);
+        n = snprintf(buf, size, "-%c", opt->short_name);
     else /* long name only: with indentation so "--" lines up with the other long names */
-        n = snprintf(buf, size, "    --%s <%s>", ln, vn);
- 
+        n = snprintf(buf, size, "    --%s", ln);
+
     if (n < 0)
         return 0;
+
+    if (vn && (size_t)n < size) {
+        int m = snprintf(buf + n, size - n, " <%s>", vn);
+        if (m < 0)
+            return 0;
+        n += m;
+    }
     return (size_t)n < size ? n : (int)size - 1;
 }
  
