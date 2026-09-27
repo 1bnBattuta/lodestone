@@ -21,6 +21,12 @@
 #include <unistd.h>
 
 int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
+    unsigned int ifindex = if_nametoindex(ifname);
+    if (ifindex == 0) {
+        perror(ifname);
+        return -1;
+    }
+
     int fd = socket(AF_PACKET, SOCK_RAW, 0);
     if (fd < 0) {
         perror("socket");
