@@ -21,7 +21,7 @@
 #include <unistd.h>
 
 int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
-    int fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+    int fd = socket(AF_PACKET, SOCK_RAW, 0);
     if (fd < 0) {
         perror("socket");
         return -1;
