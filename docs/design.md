@@ -6,13 +6,13 @@ Lodestone is a single threaded packet sniffer based on AF_PACKET kernel API with
 ## Architecture
 
 Lodestone is composed of two components : 
- - lodestone-capture: Opens a AF_PACKET socket with TPACKET_V3 mmap ring buffer interface. It then reads frames and writes pcap entries to stdout (default) or a file via -w (-w file.pcap). Reports drop counts and basic stats to stderr. Requires superuser privileges.
+ - lodestone-capture: Opens a AF_PACKET socket with TPACKET_V3 mmap ring buffer interface. It then reads frames and writes pcap entries to stdout (default) or a file via -o (-o file.pcap). Reports drop counts and basic stats to stderr. Requires superuser privileges.
  - lodestone-parse: reads pcap from stdin of a file (-r file.pcap), decodes protocols, and exports a JSONL to stdout. One packet per line, ISO 8601 UTC timestamps, nested per-layer structure, optional hex payload. No privileges required.
 
 The reason behind this split is privilege separation (parser does not need root priv). Also, separation makes it way more easier to test the parser using dedicated fuzzing pcaps. Another reason is being able to reuse each component independently. And finally: Do one thing and do it well.
 
 Typical Invocations:
- - `lodestone-capture -i eth0 -w capture.pcap` then `lodestone-parse -r capture.pcap > events.jsonl` for forensic
+ - `lodestone-capture -i eth0 -o capture.pcap` then `lodestone-parse -r capture.pcap > events.jsonl` for forensic
  - `lodestone-capture -i eth0 | lodestone-parse > events.jsonl` (live streaming)
  - `lodestone-parse -r some-fuzz-corpus.pcap` (testing / development)
 
