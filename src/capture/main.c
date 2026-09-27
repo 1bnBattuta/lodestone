@@ -213,9 +213,14 @@ int main(int argc, char **argv)
     }
 
     fflush(stdout);
-    printf("\nReceived %u packets, %lu bytes, %u dropped, freeze_q_cnt: %u\n",
-    stats.tp_packets, bytes_total, stats.tp_drops,
-    stats.tp_freeze_q_cnt);
+    fprintf(stderr,
+            "\n%u packets seen by kernel\n"
+            "%lu packets captured (%lu bytes)\n"
+            "%u packets dropped by kernel (%.2f%%)\n",
+            stats.tp_packets,
+            packets_total, bytes_total,
+            stats.tp_drops,
+            stats.tp_packets ? 100.0 * stats.tp_drops / stats.tp_packets : 0.0);
 
     output_close(&out_cfg);
 
