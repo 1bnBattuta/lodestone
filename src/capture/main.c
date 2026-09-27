@@ -62,6 +62,7 @@ static unsigned long packets_total = 0, bytes_total = 0;
 static volatile sig_atomic_t sigint = 0;
 
 static void sighandler(int num) {
+    (void)num;  // To silence "unused parameter 'num'" warning
     sigint = 1;
 }
 
@@ -138,14 +139,15 @@ int main(int argc, char **argv)
     memset(&ring, 0, sizeof(ring));
     int fd = tpacket_setup(&ring, cfg.interface_name);
     if (fd < 0) {
-        perror("tpacket_setup");
+        // Error message is handled in tpacket_setup
         exit(EXIT_FAILURE);
     }
 
     if (cfg.promisc) {
         err = tpacket_promisc(fd, cfg.interface_name);
         if (err < 0) {
-            perror("setsockopt");
+            // error msg in tpacket_promisc
+            tpacket_teardown(&ring, fd);
             return EXIT_FAILURE;
         }
     }
@@ -185,6 +187,8 @@ int main(int argc, char **argv)
             err = poll(&pfd, 1, -1);
             if (err < 0 && errno != EINTR) {
                 perror("poll");
+                output_close(&out_cfg);
+                tpacket_teardown(&ring, fd);
                 exit(EXIT_FAILURE);
             }
             continue;
@@ -203,6 +207,8 @@ int main(int argc, char **argv)
     err = getsockopt(fd, SOL_PACKET, PACKET_STATISTICS, &stats, &len);
     if (err < 0) {
         perror("getsockopt");
+        output_close(&out_cfg);
+        tpacket_teardown(&ring, fd);
         exit(1);
     }
 

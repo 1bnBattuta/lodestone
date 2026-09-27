@@ -36,6 +36,7 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     int err = setsockopt(fd, SOL_PACKET, PACKET_VERSION, &TPACKET_VERSION, sizeof(TPACKET_VERSION));
     if (err < 0) {
         perror("setsockopt");
+        close(fd);
         return -1;
     }
 
@@ -48,6 +49,7 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     err = setsockopt(fd, SOL_PACKET, PACKET_RX_RING, &ring->req, sizeof(ring->req));
     if (err < 0) {
         perror("setsockopt");
+        close(fd);
         return -1;
     }
 
@@ -55,12 +57,15 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     ring->map = mmap(NULL, total_size, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_LOCKED, fd, 0);
     if (ring->map == MAP_FAILED) {
         perror("mmap");
+        close(fd);
         return -1;
     }
 
     ring->rd = malloc(ring->req.tp_block_nr * sizeof(*ring->rd));
     if (ring->rd == NULL) {
         perror("malloc");
+        munmap(ring->map, ring->req.tp_block_nr * ring->req.tp_block_size);
+        close(fd);
         return -1;
     }
 
@@ -73,11 +78,12 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     memset(&ll, 0, sizeof(ll));
     ll.sll_family = PF_PACKET;
     ll.sll_protocol = htons(ETH_P_ALL);
-    ll.sll_ifindex = if_nametoindex(ifname);
+    ll.sll_ifindex = ifindex;
 
     err = bind(fd, (struct sockaddr *)&ll, sizeof(ll));
     if (err < 0) {
         perror("bind");
+        tpacket_teardown(ring, fd);
         return -1;
     }
 
