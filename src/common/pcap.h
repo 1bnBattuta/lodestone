@@ -15,13 +15,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define PCAP_MAGIC_USEC 0xA1B2C3D4u   /* microsecond resolution timestamps */
 #define PCAP_MAGIC_NSEC 0xA1B23C4Du   /* nanosecond resolution timestamps */
 #define PCAP_LINKTYPE_ETHERNET 1u
 #define PCAP_DEFAULT_SNAPLEN 262144u
 
 /** pcap file header (24 bytes, host byte order) */
 typedef struct {
-    uint32_t magic_number;  /**< PCAP_MAGIC_NSEC */
+    uint32_t magic_number;  /**< PCAP_MAGIC_NSEC or PCAP_MAGIC_USEC */
     uint16_t major_ver;     /**< 2 */
     uint16_t minor_ver;     /**< 4 */
     uint32_t reserved1;     /**< 0 */
@@ -32,7 +33,8 @@ typedef struct {
 
 typedef struct {
     uint32_t ts_sec;        /**< timestamp, seconds */
-    uint32_t ts_nsec;       /**< timestamp, nanoseconds (see magic number)*/
+    uint32_t ts_nsec;       /**< nanoseconds. Always ns in memory; the reader
+                                converts µs files, the writer writes ns */
     uint32_t captured_len;  /**< bytes saved in the file*/
     uint32_t original_len;  /**< original length on the wire */
 } pcap_rec_hdr_t;
@@ -61,12 +63,12 @@ int pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
  *
  * \param fp      file pointer
  * \param data    pointer to the first byte of the packet (link-layer header)
- * \param caplen  number of bytes available in data (saved to the file)
- * \param origlen original length of the packet on the wire
- * \param ts_sec  timestamp, seconds
- * \param ts_nsec timestamp, nanoseconds
+ * \param hdr     pcap record header
  * \return 0 on success, -1 otherwise
  */
 int pcap_file_write_packet(FILE *fp, const uint8_t *data, const pcap_rec_hdr_t *hdr);
+
+// For the upcoming reading functions, the magic number must be sued to
+// detect both timestamp resolution and endianess.
 
 #endif /* LS_PCAP_H */
