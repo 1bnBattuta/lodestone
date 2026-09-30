@@ -68,7 +68,7 @@ int pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
  */
 int pcap_file_write_packet(FILE *fp, const uint8_t *data, const pcap_rec_hdr_t *hdr);
 
-// For the upcoming reading functions, the magic number must be sued to
-// detect both timestamp resolution and endianess.
+// For the upcoming reading functions, the magic number must be used to
+// detect both timestamp resolution and endianness.
 
 #endif /* LS_PCAP_H */
