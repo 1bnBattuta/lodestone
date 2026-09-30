@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "pcap.h"
+#include "../common/pcap.h"
 
 /**
  * \brief Configuration struct for the output module
