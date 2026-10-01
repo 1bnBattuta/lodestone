@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../common/pcap.h"
+#include "../common/ls_pcap.h"
 
 /**
  * \brief Configuration struct for the output module
@@ -39,7 +39,7 @@ int output_open(output_cfg_t *cfg);
  * \brief Write a record to the output file or stdout
  * \return int 0 on success, -1 otherwise
  */
-int output_write(const output_cfg_t *cfg, const pcap_rec_hdr_t *hdr, const uint8_t *data);
+int output_write(const output_cfg_t *cfg, const ls_pcap_rec_hdr_t *hdr, const uint8_t *data);
 
 /**
  * \brief flushes and closes the output file

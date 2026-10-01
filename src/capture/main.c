@@ -79,7 +79,7 @@ static int walk_block(struct tpacket_block_desc *pbd, output_cfg_t *out_cfg) {
         if (caplen > out_cfg->snaplen)
             caplen = out_cfg->snaplen;
 
-        pcap_rec_hdr_t hdr = {
+        ls_pcap_rec_hdr_t hdr = {
             .ts_sec = ppd->tp_sec,
             .ts_nsec = ppd->tp_nsec,
             .captured_len = caplen,
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
     output_cfg_t out_cfg = {
         .pcap_path = cfg.output_file,              /* NULL if no -o */
         .display   = (cfg.output_file == NULL),    /* like tcpdump -w: file or screen */
-        .snaplen   = PCAP_DEFAULT_SNAPLEN,
+        .snaplen   = LS_PCAP_DEFAULT_SNAPLEN,
         .linktype  = (uint32_t)linktype,
     };
 

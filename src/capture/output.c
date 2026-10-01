@@ -14,7 +14,7 @@
 #include <netinet/in.h>
 
 #include "output.h"
-#include "pcap.h"
+#include "../common/ls_pcap.h"
 
 int output_open(output_cfg_t *cfg)
 {
@@ -23,11 +23,11 @@ int output_open(output_cfg_t *cfg)
     if (cfg->pcap_path == NULL)
         return 0;
 
-    cfg->fp = pcap_file_create(cfg->pcap_path);
+    cfg->fp = ls_pcap_file_create(cfg->pcap_path);
     if (cfg->fp == NULL)
         return -1;
 
-    if (pcap_file_write_header(cfg->fp, cfg->snaplen, cfg->linktype) != 0) {
+    if (ls_pcap_file_write_header(cfg->fp, cfg->snaplen, cfg->linktype) != 0) {
         fclose(cfg->fp);
         cfg->fp = NULL;
         return -1;
@@ -39,13 +39,13 @@ int output_open(output_cfg_t *cfg)
  * \brief Prints packet details to stdout (best effort).
  * TODO: verbosity level
  */
-static void output_stdout(const output_cfg_t *cfg, const pcap_rec_hdr_t *hdr,
+static void output_stdout(const output_cfg_t *cfg, const ls_pcap_rec_hdr_t *hdr,
                           const uint8_t *data)
 {
     printf("%u.%09u: %u/%u\n", hdr->ts_sec, hdr->ts_nsec,
            hdr->captured_len, hdr->original_len);
 
-    if (cfg->linktype != PCAP_LINKTYPE_ETHERNET ||
+    if (cfg->linktype != LS_PCAP_LINKTYPE_ETHERNET ||
         hdr->captured_len < sizeof(struct ethhdr)) {
         putchar('\n');
         return;
@@ -61,13 +61,13 @@ static void output_stdout(const output_cfg_t *cfg, const pcap_rec_hdr_t *hdr,
     printf("Packet type: 0x%04x\n\n", ntohs(eth->h_proto));
 }
 
-int output_write(const output_cfg_t *cfg, const pcap_rec_hdr_t *hdr,
+int output_write(const output_cfg_t *cfg, const ls_pcap_rec_hdr_t *hdr,
                  const uint8_t *data)
 {
     if (cfg->display)
         output_stdout(cfg, hdr, data);
 
-    if (cfg->fp && pcap_file_write_packet(cfg->fp, data, hdr) != 0)
+    if (cfg->fp && ls_pcap_file_write_packet(cfg->fp, data, hdr) != 0)
         return -1;
 
     return 0;

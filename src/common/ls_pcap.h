@@ -1,5 +1,5 @@
 /**
- * @file pcap.h
+ * @file ls_pcap.h
  * @author Omar Merroun
  * @brief pcap writer API
  * @version 0.1
@@ -15,10 +15,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define PCAP_MAGIC_USEC 0xA1B2C3D4u   /* microsecond resolution timestamps */
-#define PCAP_MAGIC_NSEC 0xA1B23C4Du   /* nanosecond resolution timestamps */
-#define PCAP_LINKTYPE_ETHERNET 1u
-#define PCAP_DEFAULT_SNAPLEN 262144u
+#define LS_PCAP_MAGIC_USEC 0xA1B2C3D4u   /* microsecond resolution timestamps */
+#define LS_PCAP_MAGIC_NSEC 0xA1B23C4Du   /* nanosecond resolution timestamps */
+#define LS_PCAP_LINKTYPE_ETHERNET 1u
+#define LS_PCAP_DEFAULT_SNAPLEN 262144u
 
 /** pcap file header (24 bytes, host byte order) */
 typedef struct {
@@ -29,7 +29,7 @@ typedef struct {
     uint32_t reserved2;     /**< 0 */
     uint32_t snaplen;       /**< max bytes captured per packet */
     uint32_t linktype;      /**< low 16 bits: link type; high bits: FCS info */
-} pcap_hdr_t;
+} ls_pcap_hdr_t;
 
 typedef struct {
     uint32_t ts_sec;        /**< timestamp, seconds */
@@ -37,17 +37,17 @@ typedef struct {
                                 converts µs files, the writer writes ns */
     uint32_t captured_len;  /**< bytes saved in the file*/
     uint32_t original_len;  /**< original length on the wire */
-} pcap_rec_hdr_t;
+} ls_pcap_rec_hdr_t;
 
-_Static_assert(sizeof(pcap_hdr_t) == 24, "pcap file header must be 24 bytes");
-_Static_assert(sizeof(pcap_rec_hdr_t) == 16, "pcap record header must be 16 bytes");
+_Static_assert(sizeof(ls_pcap_hdr_t) == 24, "pcap file header must be 24 bytes");
+_Static_assert(sizeof(ls_pcap_rec_hdr_t) == 16, "pcap record header must be 16 bytes");
 
 /**
  * \brief Creates a pcap file, truncating it if it exists.
  * \param filename path of the file to create
  * \return file pointer, or NULL on error
  */
-FILE *pcap_file_create(const char *filename);
+FILE *ls_pcap_file_create(const char *filename);
 
 /**
  * \brief Writes the pcap file header.
@@ -56,7 +56,7 @@ FILE *pcap_file_create(const char *filename);
  * \param linktype link type (such as PCAP_LINKTYPE_ETHERNET)
  * \return 0 on success, -1 else
  */
-int pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
+int ls_pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
 
 /**
  * \brief Writes one packet (record header + data) to a pcap file.
@@ -66,7 +66,7 @@ int pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
  * \param hdr     pcap record header
  * \return 0 on success, -1 otherwise
  */
-int pcap_file_write_packet(FILE *fp, const uint8_t *data, const pcap_rec_hdr_t *hdr);
+int ls_pcap_file_write_packet(FILE *fp, const uint8_t *data, const ls_pcap_rec_hdr_t *hdr);
 
 // For the upcoming reading functions, the magic number must be used to
 // detect both timestamp resolution and endianness.
