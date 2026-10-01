@@ -1,7 +1,7 @@
 /**
  * \file ls_pcap.c
  * \author Omar Merroun
- * \brief pcap writer implementation
+ * \brief stateless pcap encoder implementation
  * \version 0.1
  * \date 2026-09-25
  * 
