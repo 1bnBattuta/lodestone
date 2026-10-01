@@ -36,6 +36,10 @@ int ls_pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype) {
 
 int ls_pcap_file_write_packet(FILE *fp, const uint8_t *data, const ls_pcap_rec_hdr_t *rec_hdr)
 {   
+    if (fp == NULL || rec_hdr == NULL || data == NULL) {
+        return -1;
+    }
+
     if (fwrite(rec_hdr, sizeof(ls_pcap_rec_hdr_t), 1, fp) != 1) {
         return -1;
     }

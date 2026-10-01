@@ -1,11 +1,11 @@
 /**
- * @file ls_pcap.h
- * @author Omar Merroun
- * @brief pcap writer API
- * @version 0.1
- * @date 2026-09-25
+ * \file ls_pcap.h
+ * \author Omar Merroun
+ * \brief pcap writer API
+ * \version 0.1
+ * \date 2026-09-25
  * 
- * @copyright Copyright (c) 2026
+ * \copyright Copyright (c) 2026
  * 
  */
 
