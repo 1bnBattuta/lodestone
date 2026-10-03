@@ -60,6 +60,31 @@ _Static_assert(sizeof(ls_pcap_rec_hdr_t) == 16, "pcap record header must be 16 b
 FILE *ls_pcap_file_create(const char *filename);
 
 /**
+ * \brief Opens an existing pcap file if exists.
+ *
+ * Does not check the file header: call ls_pcap_file_read_header() next
+ * The caller must close the file with fclose().
+ *
+ * \param filename path of the file to open
+ * \return file pointer, or NULL on error (errno set by fopen())
+ */
+FILE *ls_pcap_file_open(const char *filename);
+
+/**
+ * \brief Validates the pcap file header and populates pcap_hdr
+ * 
+ * The returned header is guaranteed to be in host endianness.
+ * the header is unspecified on failure (must be discarded).
+ * \param fp 
+ * \param hdr empty pcap_hdr to be filled
+ * \retval 0 parsed successfully, host endianness
+ * \retval 1 parsed successfully, need to reverse endianness for records
+ * \retval -1 invalid header
+ * \retval -2 I/O error or invalid argument (errno set)
+ */
+int ls_pcap_file_read_header(FILE *fp, ls_pcap_hdr_t *hdr);
+
+/**
  * \brief Checks a record header against the pcap header values.
  *
  * Checks that captured_len <= snaplen and captured_len <= original_len
@@ -104,8 +129,5 @@ int ls_pcap_file_write_header(FILE *fp, uint32_t snaplen, uint32_t linktype);
  * \return 0 on success, -1 on error (errno set)
  */
 int ls_pcap_file_write_packet(FILE *fp, const uint8_t *data, const ls_pcap_rec_hdr_t *rec_hdr);
-
-/* TODO(reader): use the magic number to detect both timestamp resolution
- * and endianness and reject pcapng (0A0D0D0A) with a clear error. */
 
 #endif /* LS_PCAP_H */
