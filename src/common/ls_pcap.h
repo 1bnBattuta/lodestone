@@ -1,7 +1,7 @@
 /**
  * \file ls_pcap.h
  * \author Omar Merroun
- * \brief A stateless pcap format encoder API
+ * \brief A stateless pcap format encoder/decoder API
  * \version 0.1
  * \date 2026-09-25
  * 
@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define LS_PCAP_HEADER_SIZE 24u
+#define LS_PCAP_REC_HEADER_SIZE 16u
 #define LS_PCAP_NSEC_PER_SEC 1000000000u
 #define LS_PCAP_MAGIC_USEC 0xA1B2C3D4u   /* microsecond resolution timestamps */
 #define LS_PCAP_MAGIC_NSEC 0xA1B23C4Du   /* nanosecond resolution timestamps */
