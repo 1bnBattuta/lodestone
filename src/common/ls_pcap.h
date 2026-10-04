@@ -18,8 +18,11 @@
 #define LS_PCAP_HEADER_SIZE 24u
 #define LS_PCAP_REC_HEADER_SIZE 16u
 #define LS_PCAP_NSEC_PER_SEC 1000000000u
+#define LS_PCAP_USEC_PER_SEC 1000000u
 #define LS_PCAP_MAGIC_USEC 0xA1B2C3D4u   /* microsecond resolution timestamps */
 #define LS_PCAP_MAGIC_NSEC 0xA1B23C4Du   /* nanosecond resolution timestamps */
+#define LS_PCAP_MAGIC_USEC_SWAPPED 0xD4C3B2A1u
+#define LS_PCAP_MAGIC_NSEC_SWAPPED 0x4D3CB2A1u
 #define LS_PCAP_LINKTYPE_ETHERNET 1u
 #define LS_PCAP_DEFAULT_SNAPLEN 262144u
 
@@ -75,12 +78,13 @@ FILE *ls_pcap_file_open(const char *filename);
 /**
  * \brief Validates the pcap file header and populates pcap_hdr
  * 
- * The returned header is guaranteed to be in host endianness.
+ * The returned header is guaranteed to be in host endianness except the
+ * magic number field which is left for the record header reader to detect
+ * whether record fields are in correct endianness.
  * the header is unspecified on failure (must be discarded).
  * \param fp 
  * \param hdr empty pcap_hdr to be filled
  * \retval 0 parsed successfully, host endianness
- * \retval 1 parsed successfully, need to reverse endianness for records
  * \retval -1 invalid header
  * \retval -2 I/O error or invalid argument (errno set)
  */

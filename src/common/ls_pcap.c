@@ -15,7 +15,7 @@
 
 
 static void bswap_pcap_hdr(ls_pcap_hdr_t *hdr) {
-    hdr->magic_number   = ls_bswap32(hdr->magic_number);
+    //hdr->magic_number   = ls_bswap32(hdr->magic_number);
     hdr->major_ver      = ls_bswap16(hdr->major_ver);
     hdr->minor_ver      = ls_bswap16(hdr->minor_ver);
     hdr->reserved1      = ls_bswap32(hdr->reserved1);
@@ -41,8 +41,8 @@ FILE *ls_pcap_file_open(const char *filename) {
 }
 
 int ls_pcap_file_read_header(FILE *fp, ls_pcap_hdr_t *hdr) {
-    int status = 0;
     if (fp == NULL || hdr == NULL) {
+        errno = EINVAL;
         return -2;  // fallback, conditions must be checked by the caller
     }
 
@@ -50,18 +50,18 @@ int ls_pcap_file_read_header(FILE *fp, ls_pcap_hdr_t *hdr) {
         return ferror(fp) ? -2 : -1;
     }
 
+    // magic number is not bswapped so that record header reader can detect
+    // if the records are in the correct endianness.
     switch (hdr->magic_number) {
         case LS_PCAP_MAGIC_USEC:
             break;
         case LS_PCAP_MAGIC_NSEC:
             break;
-        case 0xD4C3B2A1u:   // swapped case for LS_PCAP_MAGIC_USEC
+        case LS_PCAP_MAGIC_USEC_SWAPPED:
             bswap_pcap_hdr(hdr);
-            status = 1;
             break;
-        case 0x4D3CB2A1u:    // swapped case for LS_PCAP_MAGIC_NSEC
+        case LS_PCAP_MAGIC_NSEC_SWAPPED:
             bswap_pcap_hdr(hdr);
-            status = 1;
             break;
         default:
             return -1;
