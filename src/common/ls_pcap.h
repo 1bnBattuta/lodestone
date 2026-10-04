@@ -91,6 +91,20 @@ FILE *ls_pcap_file_open(const char *filename);
 int ls_pcap_file_read_header(FILE *fp, ls_pcap_hdr_t *hdr);
 
 /**
+ * \brief Validates a pcap rec header and populates rec_hdr
+ * 
+ * The returned header is guaranteed to be in host endianness.
+ * the header is unspecified on failure (must be discarded).
+ * \param magic_number must be a valid pcap magic number or a bswapped one
+ * \param fp 
+ * \param rec_hdr empty rec_hdr to be filled
+ * \retval 1 no more records (end of file at a record boundary)
+ * \retval -1 invalid header
+ * \retval -2 I/O error or invalid argument (errno set)
+ */
+int ls_pcap_rec_read_header(FILE *fp, ls_pcap_rec_hdr_t *rec_hdr, uint32_t magic_number);
+
+/**
  * \brief Checks a record header against the pcap header values.
  *
  * Checks that captured_len <= snaplen and captured_len <= original_len

@@ -24,6 +24,13 @@ static void bswap_pcap_hdr(ls_pcap_hdr_t *hdr) {
     hdr->linktype       = ls_bswap32(hdr->linktype);
 }
 
+static void bswap_pcap_rec_hdr(ls_pcap_rec_hdr_t *hdr) {
+    hdr->ts_sec         = ls_bswap32(hdr->ts_sec);
+    hdr->ts_nsec        = ls_bswap32(hdr->ts_nsec);
+    hdr->captured_len   = ls_bswap32(hdr->captured_len);
+    hdr->original_len   = ls_bswap32(hdr->original_len);
+}
+
 FILE *ls_pcap_file_create(const char *filename) {
     if (filename == NULL) {
         errno = EINVAL;
@@ -73,7 +80,44 @@ int ls_pcap_file_read_header(FILE *fp, ls_pcap_hdr_t *hdr) {
 
     if (hdr->snaplen == 0) {return -1;}
 
-    return status;
+    return 0;
+}
+
+int ls_pcap_rec_read_header(FILE *fp, ls_pcap_rec_hdr_t *rec_hdr, uint32_t magic_number) {
+    int swapped = 0;
+    int nsec = 0;
+
+    switch (magic_number) {
+        case LS_PCAP_MAGIC_USEC:         break;
+        case LS_PCAP_MAGIC_NSEC:         nsec = 1; break;
+        case LS_PCAP_MAGIC_USEC_SWAPPED: swapped = 1; break;
+        case LS_PCAP_MAGIC_NSEC_SWAPPED: swapped = 1; nsec = 1; break;
+        default: errno = EINVAL; return -2;
+    }
+    if (fp == NULL || rec_hdr == NULL) {
+        errno = EINVAL;
+        return -2;
+    }
+
+    size_t n = fread(rec_hdr, 1, LS_PCAP_REC_HEADER_SIZE, fp);
+    if (n != LS_PCAP_REC_HEADER_SIZE) {
+        if (ferror(fp)) return -2;
+        return (n == 0) ? 1 : -1;
+    }
+
+    if (swapped == 1)
+        bswap_pcap_rec_hdr(rec_hdr);
+
+    if (rec_hdr->captured_len > rec_hdr->original_len)
+        return -1;
+
+    if (nsec == 1) {
+        if (rec_hdr->ts_nsec >= LS_PCAP_NSEC_PER_SEC) return -1;
+    } else {
+        if (rec_hdr->ts_nsec >= LS_PCAP_USEC_PER_SEC) return -1;
+        rec_hdr->ts_nsec *= 1000u;     /* µs -> ns, per the struct contract */
+    }
+    return 0;
 }
 
 int ls_pcap_rec_hdr_check(const ls_pcap_rec_hdr_t *rec_hdr, uint32_t snaplen) {
