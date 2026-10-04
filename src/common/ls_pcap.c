@@ -15,13 +15,13 @@
 
 
 static void bswap_pcap_hdr(ls_pcap_hdr_t *hdr) {
-    hdr->magic_number   = ls_bswap(hdr->magic_number);
-    hdr->major_ver      = ls_bswap(hdr->major_ver);
-    hdr->minor_ver      = ls_bswap(hdr->minor_ver);
-    hdr->reserved1      = ls_bswap(hdr->reserved1);
-    hdr->reserved2      = ls_bswap(hdr->reserved2);
-    hdr->snaplen        = ls_bswap(hdr->snaplen);
-    hdr->linktype       = ls_bswap(hdr->linktype);
+    hdr->magic_number   = ls_bswap32(hdr->magic_number);
+    hdr->major_ver      = ls_bswap16(hdr->major_ver);
+    hdr->minor_ver      = ls_bswap16(hdr->minor_ver);
+    hdr->reserved1      = ls_bswap32(hdr->reserved1);
+    hdr->reserved2      = ls_bswap32(hdr->reserved2);
+    hdr->snaplen        = ls_bswap32(hdr->snaplen);
+    hdr->linktype       = ls_bswap32(hdr->linktype);
 }
 
 FILE *ls_pcap_file_create(const char *filename) {
