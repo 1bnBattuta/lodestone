@@ -1,6 +1,6 @@
 # Lodestone
 
-Lodestone is a single-threaded Linux packet sniffer written in C. It captures through `AF_PACKET` with a `TPACKET_V3 memory-mapped ring`: the kernel writes packets straight into memory shared with the sniffer, so there is no system call nor copy per packet. Captures are saved as nanosecond-resolution **pcap** files that Wireshark and tcpdump can open.
+Lodestone is a single-threaded Linux packet sniffer written in C. It captures packets using `AF_PACKET` with a `TPACKET_V3 memory-mapped ring`: the kernel writes packets straight into memory shared with the sniffer in user space, so there is no system call nor copy per packet. Captures are saved as nanosecond-resolution **pcap** files that Wireshark and tcpdump can open.
 It has no dependencies beyond libc and the kernel headers.
 
 ## Performance at a glance
@@ -23,9 +23,9 @@ Measured on a laptop (Intel Core i7-5500U, 2 cores / 4 threads, Linux 7.2) over 
                                                  └─► block handed back to the kernel
 ```
 
-- **Block-based ring (TPACKET_V3).** The kernel packs variable-length packets into 4 MiB blocks and hands over a whole block at once. One `poll()` wake-up covers thousands of packets, and small frames don't waste a fixed-size slot as they would with TPACKET_V2.
-- **Lock-free hand-off.** Ownership of each block is a single status word. Lodestone reads it with an acquire load and returns the block with a release store, so packet data is never read before the kernel has finished writing it or after the block is given back.
-- **Retire timeout.** `tp_retire_blk_tov = 60 ms` makes the kernel return half-filled blocks, so packets on a slow link still arrive eventually.
+- **Block-based ring (TPACKET_V3).** The kernel stores variable-length packets into 4 MiB blocks and hands over a whole block at once. One `poll()` wake-up covers thousands of packets, and small frames don't waste a fixed-size slot like with TPACKET_V2.
+- **Lock-free hand-off.** Ownership of each block is a single status word. Lodestone reads it with an acquire load and returns the block with a release store, so packet data is never read before the kernel has finished writing it or after the block is given back (Weakly-ordered processors are supported).
+- **Retire timeout.** `tp_retire_blk_tov = 60 ms` makes the kernel return partially filled blocks, so packets on a slow link still arrive eventually.
 - **Clean start.** The socket is opened with protocol 0 and only starts receiving at `bind()` on the chosen interface, so no traffic from other interfaces leaks in during setup (painful debug session there).
 - **Accurate statistics.** On exit, Lodestone reads `PACKET_STATISTICS` and reports packets seen by the kernel, packets captured and packets dropped. Seen = captured + dropped.
 
@@ -46,6 +46,7 @@ Use `make release` for real captures and benchmarks. The sanitizers in the debug
 ## Usage
 
 Capturing needs `CAP_NET_RAW` which usually means root.
+Debug sanitizers also require root privileges.
 
 ```sh
 # save to a pcap file
@@ -60,11 +61,6 @@ sudo ./build/release/lodestone-capture -i eth0 -P -o capture.pcap
 
 Stop with Ctrl+C. Statistics are printed to stderr:
 
-```
-2440000 packets seen by kernel
-2440000 packets captured (3694160000 bytes)
-0 packets dropped by kernel (0.00%)
-```
 
 ```
 Options:
@@ -142,7 +138,3 @@ docs/design.md             design document
 - [packet_mmap.rst](https://www.kernel.org/doc/Documentation/networking/packet_mmap.rst): kernel documentation for PACKET_MMAP / TPACKET_V3
 - [`net/packet/af_packet.c`](https://github.com/torvalds/linux/blob/master/net/packet/af_packet.c)
 - [packet(7)](https://man7.org/linux/man-pages/man7/packet.7.html), [RFC 2544](https://www.rfc-editor.org/rfc/rfc2544)
-
-## License
-
-See [LICENSE](LICENSE).
