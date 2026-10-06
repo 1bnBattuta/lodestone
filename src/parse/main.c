@@ -14,12 +14,13 @@
 #include <stdlib.h>
 
 #include "../common/args.h"
+#include "../common/ls_pcap.h"
 
 // Global config
 typedef struct {
     int show_help;
-    FILE *input_file;
-    FILE *output_file;
+    char *input_file;
+    char *output_file;
 } config_t;
 
 static config_t ls_parse_cfg = {
@@ -75,6 +76,29 @@ int main(int argc, char **argv) {
     if (sigaction(SIGINT, &sa, NULL) == -1) {
         perror("sigaction");
         exit(EXIT_FAILURE);
+    }
+
+    if (ls_parse_cfg.input_file != NULL) {
+        FILE *fp = ls_pcap_file_open(ls_parse_cfg.input_file);
+        if (fp == NULL) {
+            perror("opening pcap file failed");
+            return EXIT_FAILURE;
+        }
+        ls_parse_ctx.ifp = fp;
+    } else {
+        ls_parse_ctx.ifp = stdin;
+    }
+
+    // User only for validation for now at least
+    ls_pcap_hdr_t hdr = {0};
+
+    err = ls_pcap_file_read_header(ls_parse_ctx.ifp, &hdr);
+    if (err == -1) {
+        fprintf(stderr, "Invalid pcap header\n");
+        return EXIT_FAILURE;
+    } else if (err == -2) {
+        perror("reading pcap header failed");
+        return EXIT_FAILURE;
     }
 
     
