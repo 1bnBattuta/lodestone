@@ -101,6 +101,17 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    if (ls_parse_cfg.output_file != NULL) {
+        FILE *fp = fopen(ls_parse_cfg.output_file, "wb");
+        if (fp == NULL) {
+            perror("opening output file failed");
+            return EXIT_FAILURE;
+        }
+        ls_parse_ctx.ofp = fp;
+    } else {
+        ls_parse_ctx.ofp = stdout;
+    }
+
     
 
     return EXIT_SUCCESS;
