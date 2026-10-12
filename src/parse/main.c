@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
         ls_parse_ctx.ifp = stdin;
     }
 
-    // User only for validation for now at least
+    // Used only for validation for now at least
     ls_pcap_hdr_t hdr = {0};
 
     err = ls_pcap_file_read_header(ls_parse_ctx.ifp, &hdr);
@@ -112,6 +112,9 @@ int main(int argc, char **argv) {
         ls_parse_ctx.ofp = stdout;
     }
 
+    // Print to stdout file info
+    printf("Pcap %d.%d\n", hdr.major_ver, hdr.minor_ver);
+    printf("Snaplen: %d\nlinktype: %d\n", hdr.snaplen, hdr.linktype);
     
 
     return EXIT_SUCCESS;
