@@ -12,14 +12,17 @@
 
 CAPTURE_NAME := lodestone-capture
 
+SAN_FLAGS := -fsanitize=address,undefined -fno-sanitize-recover=undefined
+SAN_LDFLAGS  := $(SAN_FLAGS) -static-libasan -static-libubsan
+
 # mode
 BUILD ?= debug
 ifeq ($(BUILD),release)
   MODE_CFLAGS  := -O2 -g -DNDEBUG
   MODE_LDFLAGS :=
 else ifeq ($(BUILD),debug)
-  MODE_CFLAGS  := -O0 -g3 -fno-omit-frame-pointer -fsanitize=address,undefined
-  MODE_LDFLAGS := -fsanitize=address,undefined
+  MODE_CFLAGS  := -O0 -g3 -fno-omit-frame-pointer $(SAN_FLAGS)
+  MODE_LDFLAGS := $(SAN_LDFLAGS)
 else
   $(error BUILD must be 'debug' or 'release', got '$(BUILD)')
 endif

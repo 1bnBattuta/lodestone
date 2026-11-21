@@ -4,9 +4,9 @@
  * @brief lodestone-capture's entry point
  * @version 0.1
  * @date 2026-09-19
- * 
+ *
  * @copyright Copyright (c) 2026
- * 
+ *
  */
 
 #include <errno.h>
@@ -22,10 +22,10 @@
 #include "../common/args.h"
 #include "output.h"
 #include "packet_mmap.h"
-#include "pcap.h"
+#include "../common/ls_pcap.h"
 
 #ifndef likely
-#define likely(x)   __builtin_expect(!!(x), 1)
+#define likely(x) __builtin_expect(!!(x), 1)
 #endif
 #ifndef unlikely
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -33,7 +33,7 @@
 
 // Global config
 typedef struct {
-    int af_xdp;         // Address family: 0 AF_PACKET, 1 AF_XDP
+    int af_xdp; // Address family: 0 AF_PACKET, 1 AF_XDP
     int show_help;
     int promisc;
     const char *interface_name;
@@ -41,28 +41,23 @@ typedef struct {
 } config_t;
 
 static config_t cfg = {
-    .af_xdp = 0,
-    .show_help = 0,
-    .interface_name = NULL,
-    .output_file = NULL,
-    .promisc = 0
-};
+    .af_xdp = 0, .show_help = 0, .interface_name = NULL, .output_file = NULL, .promisc = 0};
 
 // Supported command line arguments
 const arg_opt_t opts[] = {
-    {'i', "interface", ARG_STRING, &cfg.interface_name, NULL, "Network interface to capture on", "name"},
+    {'i', "interface", ARG_STRING, &cfg.interface_name, NULL, "Network interface to capture on",
+     "name"},
     {'h', "help", ARG_FLAG, &cfg.show_help, NULL, "Show this help menu and exit", NULL},
     {'P', "promiscuous", ARG_FLAG, &cfg.promisc, NULL, "Enable NIC Promiscuous mode", NULL},
     {0, "af_xdp", ARG_FLAG, &cfg.af_xdp, NULL, "Run in AF_XDP mode", NULL},
     {'o', "output", ARG_STRING, &cfg.output_file, NULL, "Output file", "name"},
-    ARG_END
-};
+    ARG_END};
 
 static unsigned long packets_total = 0, bytes_total = 0;
 static volatile sig_atomic_t sigint = 0;
 
 static void sighandler(int num) {
-    (void)num;  // To silence "unused parameter 'num'" warning
+    (void)num; // To silence "unused parameter 'num'" warning
     sigint = 1;
 }
 
@@ -70,7 +65,7 @@ static int walk_block(struct tpacket_block_desc *pbd, output_cfg_t *out_cfg) {
     unsigned long bytes = 0;
     int num_pkts = pbd->hdr.bh1.num_pkts;
     struct tpacket3_hdr *ppd;
-    ppd = (struct tpacket3_hdr *) ( (uint8_t *) pbd + pbd->hdr.bh1.offset_to_first_pkt);
+    ppd = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
 
     for (int i = 0; i < num_pkts; ++i) {
         bytes += ppd->tp_snaplen;
@@ -86,11 +81,11 @@ static int walk_block(struct tpacket_block_desc *pbd, output_cfg_t *out_cfg) {
             .original_len = ppd->tp_len,
         };
 
-        uint8_t *data = (uint8_t *) ppd + ppd->tp_mac; 
+        uint8_t *data = (uint8_t *)ppd + ppd->tp_mac;
         if (output_write(out_cfg, &hdr, data) < 0) {
             return -1;
         }
-        ppd = (struct tpacket3_hdr *) ( (uint8_t *) ppd + ppd->tp_next_offset);
+        ppd = (struct tpacket3_hdr *)((uint8_t *)ppd + ppd->tp_next_offset);
     }
 
     packets_total += num_pkts;
@@ -99,8 +94,7 @@ static int walk_block(struct tpacket_block_desc *pbd, output_cfg_t *out_cfg) {
     return 0;
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int err;
 
     err = args_parse(argc, argv, opts);
@@ -133,7 +127,7 @@ int main(int argc, char **argv)
     if (sigaction(SIGINT, &sa, NULL) == -1) {
         perror("sigaction");
         exit(EXIT_FAILURE);
-    } 
+    }
 
     struct tpacket_ring ring;
     memset(&ring, 0, sizeof(ring));
@@ -160,14 +154,14 @@ int main(int argc, char **argv)
     }
 
     output_cfg_t out_cfg = {
-        .pcap_path = cfg.output_file,              /* NULL if no -o */
-        .display   = (cfg.output_file == NULL),    /* like tcpdump -w: file or screen */
-        .snaplen   = LS_PCAP_DEFAULT_SNAPLEN,
-        .linktype  = (uint32_t)linktype,
+        .pcap_path = cfg.output_file,         /* NULL if no -o */
+        .display = (cfg.output_file == NULL), /* like tcpdump -w: file or screen */
+        .snaplen = LS_PCAP_DEFAULT_SNAPLEN,
+        .linktype = (uint32_t)linktype,
     };
 
     if (output_open(&out_cfg) < 0) {
-        perror(cfg.output_file);                /* fopen sets errno */
+        perror(cfg.output_file); /* fopen sets errno */
         tpacket_teardown(&ring, fd);
         return EXIT_FAILURE;
     }
@@ -181,7 +175,7 @@ int main(int argc, char **argv)
     struct tpacket_block_desc *pbd;
     unsigned int block_num = 0, blocks = ring.req.tp_block_nr;
     while (likely(!sigint)) {
-        pbd = (struct tpacket_block_desc *) ring.rd[block_num].iov_base;
+        pbd = (struct tpacket_block_desc *)ring.rd[block_num].iov_base;
 
         if (!tpacket_block_ready(pbd)) {
             err = poll(&pfd, 1, -1);
@@ -196,7 +190,7 @@ int main(int argc, char **argv)
 
         if (walk_block(pbd, &out_cfg) < 0) {
             perror("write");
-            break;  // To release resources and prints stats
+            break; // To release resources and prints stats
         }
         tpacket_block_flush(pbd);
         block_num = (block_num + 1) % blocks;
@@ -217,9 +211,7 @@ int main(int argc, char **argv)
             "\n%u packets seen by kernel\n"
             "%lu packets captured (%lu bytes)\n"
             "%u packets dropped by kernel (%.2f%%)\n",
-            stats.tp_packets,
-            packets_total, bytes_total,
-            stats.tp_drops,
+            stats.tp_packets, packets_total, bytes_total, stats.tp_drops,
             stats.tp_packets ? 100.0 * stats.tp_drops / stats.tp_packets : 0.0);
 
     output_close(&out_cfg);
