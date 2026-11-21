@@ -61,7 +61,6 @@ sudo ./build/release/lodestone-capture -i eth0 -P -o capture.pcap
 
 Stop with Ctrl+C. Statistics are printed to stderr:
 
-
 ```
 Options:
   -i, --interface <name>  Network interface to capture on
@@ -90,7 +89,7 @@ A sniffer's job is to see every packet, so the metric is **packet loss at a give
 Intel Core i7-5500U @ 2.40 GHz (2 cores / 4 threads), Linux 7.2.4, `performance` CPU governor.
 
 | Traffic | Offered rate | Sent | Captured | Dropped | Loss | CPU (one core) |
-|---|---:|---:|---:|---:|---:|---:|
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1518 B frames, 30 s | 81.0 k pkt/s (1 Gbps line rate) | 2,440,000 | 2,440,000 | 0 | **0 %** | 5.8 % |
 | 64 B frames, 1 sender | 173 k pkt/s | 5,000,000 | 5,000,000 | 0 | **0 %** | 1.3 % |
 | 64 B frames, 3 senders | 309 k pkt/s | 15,000,000 | 15,000,000 | 0 | **0 %** | 3.4 % |
@@ -117,7 +116,7 @@ sudo bash bench/bench.sh        # close to 2 minutes, cleans up after itself
 ```
 src/capture/main.c         capture loop, block walker, statistics
 src/capture/packet_mmap.*  AF_PACKET socket, TPACKET_V3 ring setup/teardown, promiscuous mode, link type
-src/capture/pcap.*         pcap writer (nanosecond timestamps)
+src/common/pcap.*         pcap writer (nanosecond timestamps)
 src/capture/output.*       output: pcap file or readable text on stdout
 src/common/args.*          small table-driven command-line parser
 bench/                     traffic generator (gen_pcap.py) and benchmark script (bench.sh)
@@ -126,10 +125,8 @@ docs/design.md             design document
 
 ## Roadmap
 
-- [ ] `lodestone-parse`: pcap to JSONL decoder (Ethernet, IPv4/6, TCP, UDP, ICMP, ARP), fuzz-tested
-- [ ] Separate writer thread, so slow disk writes don't cause ring drops
+- [ ] AF_XDP support
 - [ ] Configurable ring size and snap length
-- [ ] pcap streaming to stdout (`-o -`) for `lodestone-capture | lodestone-parse`
 - [ ] Faster traffic generation (kernel `pktgen`) to test 64 B line rate
 - [ ] Hardware timestamps
 
