@@ -4,9 +4,9 @@
  * @brief AF_PACKET socket implementation
  * @version 0.1
  * @date 2026-09-19
- * 
+ *
  * @copyright Copyright (c) 2026
- * 
+ *
  */
 
 #include "packet_mmap.h"
@@ -44,7 +44,8 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     ring->req.tp_block_size = BLOCK_SIZE;
     ring->req.tp_block_nr = BLOCK_NR;
     ring->req.tp_frame_size = FRAME_SIZE;
-    ring->req.tp_frame_nr = (ring->req.tp_block_size * ring->req.tp_block_nr) / ring->req.tp_frame_size;
+    ring->req.tp_frame_nr =
+        (ring->req.tp_block_size * ring->req.tp_block_nr) / ring->req.tp_frame_size;
     ring->req.tp_retire_blk_tov = RETIRE_BLK_TOV;
     err = setsockopt(fd, SOL_PACKET, PACKET_RX_RING, &ring->req, sizeof(ring->req));
     if (err < 0) {
@@ -54,7 +55,7 @@ int tpacket_setup(struct tpacket_ring *ring, const char *ifname) {
     }
 
     unsigned int total_size = ring->req.tp_block_size * ring->req.tp_block_nr;
-    ring->map = mmap(NULL, total_size, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_LOCKED, fd, 0);
+    ring->map = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED, fd, 0);
     if (ring->map == MAP_FAILED) {
         perror("mmap");
         close(fd);
@@ -96,13 +97,13 @@ void tpacket_teardown(struct tpacket_ring *ring, int fd) {
     close(fd);
 }
 
-int tpacket_promisc(int fd ,const char *ifname) {
+int tpacket_promisc(int fd, const char *ifname) {
     struct packet_mreq mreq;
     memset(&mreq, 0, sizeof(mreq));
-    
+
     mreq.mr_ifindex = if_nametoindex(ifname);
     mreq.mr_type = PACKET_MR_PROMISC;
-    
+
     int err = setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
     if (err < 0) {
         perror("setsockopt: Promiscuous mode setup");
@@ -120,12 +121,12 @@ int tpacket_linktype(int fd) {
     }
 
     switch (sll.sll_hatype) {
-        case ARPHRD_ETHER:
-        case ARPHRD_LOOPBACK:   /* Linux loopback uses a zero Ethernet header */
-            return 1;           /* LINKTYPE_ETHERNET */
-        case ARPHRD_NONE:       /* like: tun and WireGuard. no link header */
-            return 101;         /* LINKTYPE_RAW */
-        default:
-            return -1;
+    case ARPHRD_ETHER:
+    case ARPHRD_LOOPBACK: /* Linux loopback uses a zero Ethernet header */
+        return 1;         /* LINKTYPE_ETHERNET */
+    case ARPHRD_NONE:     /* like: tun and WireGuard. no link header */
+        return 101;       /* LINKTYPE_RAW */
+    default:
+        return -1;
     }
 }
